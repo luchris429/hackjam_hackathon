@@ -101,9 +101,12 @@ while(True):
             clicked = True
             pyautogui.click()
             pygame.mixer.music.play()
+        elif area < 1000 and screen_center[1] < SCREEN_HEIGHT / 2 and not clicked:
+            pyautogui.scroll(2)
+        elif area < 1000 and screen_center[1] > SCREEN_HEIGHT / 2 and not clicked:
+            pyautogui.scroll(-2)
         elif area < 3500 and clicked:
             clicked = False
-            pygame.mixer.music.play()
     cv2.imshow('image2', mask)
     if cv2.waitKey(1) & 0xFF == ord('q'):
             break
