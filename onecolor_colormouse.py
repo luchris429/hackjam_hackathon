@@ -3,6 +3,7 @@ import cv2
 import pyautogui
 import os
 import pygame
+from scikits import audiolab
 
 cap = cv2.VideoCapture(0)
 
@@ -23,6 +24,8 @@ WIDTH_RATIO = SCREEN_WIDTH / FRAME_WIDTH
 MAX_NUM_OBJECTS = 10
 MIN_OBJECT_AREA = 20*20
 MAX_OBJECT_AREA = int(FRAME_HEIGHT * FRAME_WIDTH / 1.5)
+CLICK_THRESHOLD = 4000
+SCROLL_THRESHOLD = 1500
 
 
 def nothing(x):
@@ -72,8 +75,8 @@ while(True):
     # When everything done, release the capture
 cv2.destroyAllWindows()
 clicked = False
-pygame.init()
-pygame.mixer.music.load("beep-02.wav")
+frames1, fs1, encoder1 = audiolab.wavread("beep-02.wav")
+frames2, fs2, encoder2 = audiolab.wavread("censor-beep-01.wav")
 
 while(True):
         # Capture frame-by-frame
@@ -94,18 +97,24 @@ while(True):
         c = max(contours, key=cv2.contourArea)
         m = cv2.moments(c)
         center = (int(m['m10'] / m['m00']), int(m['m01'] / m['m00']))
-        screen_center = [int((FRAME_WIDTH - center[0]) * WIDTH_RATIO), int(center[1] * HEIGHT_RATIO)]
+        screen_x = int((FRAME_WIDTH - center[0]) * WIDTH_RATIO)
+        screen_y = int(center[1] * HEIGHT_RATIO)
+        screen_x = 0 if screen_x < 0 else screen_x
+        screen_x = SCREEN_WIDTH if screen_x > SCREEN_WIDTH else screen_x
+        screen_y = 0 if screen_y < 0 else screen_y
+        screen_y = SCREEN_HEIGHT if screen_y > SCREEN_HEIGHT else screen_y
+        screen_center = [screen_x, screen_y]
         pyautogui.moveTo(screen_center[0] - WIDTH_OFFSET,screen_center[1] - HEIGHT_OFFSET)
         area = cv2.contourArea(c)
-        if area > 3500 and not clicked:
+        if area > CLICK_THRESHOLD and not clicked:
             clicked = True
             pyautogui.click()
-            pygame.mixer.music.play()
-        elif area < 1000 and screen_center[1] < SCREEN_HEIGHT / 2 and not clicked:
+            audiolab.play(frames1)
+        elif area < SCROLL_THRESHOLD and screen_center[1] < SCREEN_HEIGHT / 2 and not clicked:
             pyautogui.scroll(2)
-        elif area < 1000 and screen_center[1] > SCREEN_HEIGHT / 2 and not clicked:
+        elif area < SCROLL_THRESHOLD and screen_center[1] > SCREEN_HEIGHT / 2 and not clicked:
             pyautogui.scroll(-2)
-        elif area < 3500 and clicked:
+        elif area < CLICK_THRESHOLD and clicked:
             clicked = False
     cv2.imshow('image2', mask)
     if cv2.waitKey(1) & 0xFF == ord('q'):
