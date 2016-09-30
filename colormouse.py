@@ -26,18 +26,18 @@ def nothing(x):
 
 cv2.namedWindow('image')
 cv2.namedWindow('image2')
-cv2.createTrackbar('H_MIN','image',0,255,nothing)
-cv2.createTrackbar('S_MIN','image',0,255,nothing)
+cv2.createTrackbar('H_MIN','image',77,255,nothing)
+cv2.createTrackbar('S_MIN','image',69,255,nothing)
 cv2.createTrackbar('V_MIN','image',0,255,nothing)
-cv2.createTrackbar('H_MAX','image',0,255,nothing)
-cv2.createTrackbar('S_MAX','image',0,255,nothing)
-cv2.createTrackbar('V_MAX','image',0,255,nothing)
-cv2.createTrackbar('H_MIN2','image',0,255,nothing)
-cv2.createTrackbar('S_MIN2','image',0,255,nothing)
-cv2.createTrackbar('V_MIN2','image',0,255,nothing)
-cv2.createTrackbar('H_MAX2','image',0,255,nothing)
-cv2.createTrackbar('S_MAX2','image',0,255,nothing)
-cv2.createTrackbar('V_MAX2','image',0,255,nothing)
+cv2.createTrackbar('H_MAX','image',91,255,nothing)
+cv2.createTrackbar('S_MAX','image',255,255,nothing)
+cv2.createTrackbar('V_MAX','image',174,255,nothing)
+cv2.createTrackbar('H_MIN2','image',16,255,nothing)
+cv2.createTrackbar('S_MIN2','image',79,255,nothing)
+cv2.createTrackbar('V_MIN2','image',116,255,nothing)
+cv2.createTrackbar('H_MAX2','image',44,255,nothing)
+cv2.createTrackbar('S_MAX2','image',157,255,nothing)
+cv2.createTrackbar('V_MAX2','image',225,255,nothing)
 
 switch = '0: OFF \n1 : ON'
 cv2.createTrackbar(switch,'image',0,1,nothing)
@@ -74,7 +74,6 @@ while(True):
     upper2 = np.array([h_max2, s_max2, v_max2])
 
     on = cv2.getTrackbarPos(switch,'image')
-    
 
     mask = cv2.inRange(hsv, lower, upper)
     mask = cv2.erode(mask, None, iterations=2)
@@ -95,22 +94,22 @@ while(True):
         m = cv2.moments(c)
         center = (int(m['m10'] / m['m00']), int(m['m01'] / m['m00']))
         screen_center = [int((FRAME_WIDTH - center[0]) * WIDTH_RATIO), int(center[1] * HEIGHT_RATIO)]
-        ##print center, screen_center
-    	if on:
-	    pyautogui.moveTo(screen_center[0],screen_center[1])
+    if on:
+        pyautogui.moveTo(screen_center[0],screen_center[1])
 
     if len(contours2) > 0:
-	c2 = max(contours2, key=cv2.contourArea)
-	if cv2.contourArea(c2) > MIN_OBJECT_AREA and on:
-	    pyautogui.click()
-
+        c2 = max(contours2, key=cv2.contourArea)
+    if cv2.contourArea(c2) > MIN_OBJECT_AREA and on:
+        pyautogui.mouseDown()
+    else:
+        pyautogui.mouseUp()
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
     if not cv2.getTrackbarPos(switch2,'image'):
-    	cv2.imshow('image2', mask)
+        cv2.imshow('image2', mask)
     else:
-	cv2.imshow('image2',mask2)
+        cv2.imshow('image2',mask2)
     # When everything done, release the capture
 cap.release()
 cv2.destroyAllWindows()

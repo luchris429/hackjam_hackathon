@@ -3,9 +3,10 @@ import cv2
 import pyautogui
 import os
 import pygame
-from scikits import audiolab
+from pymouse import PyMouse
 
 cap = cv2.VideoCapture(0)
+mouse = PyMouse()
 
 H_MIN = 0
 H_MAX = 256
@@ -25,7 +26,7 @@ MAX_NUM_OBJECTS = 10
 MIN_OBJECT_AREA = 20*20
 MAX_OBJECT_AREA = int(FRAME_HEIGHT * FRAME_WIDTH / 1.5)
 CLICK_THRESHOLD = 4000
-SCROLL_THRESHOLD = 1500
+SCROLL_THRESHOLD = 1000
 
 
 def nothing(x):
@@ -33,12 +34,12 @@ def nothing(x):
 
 cv2.namedWindow('image')
 cv2.namedWindow('image2')
-cv2.createTrackbar('H_MIN','image',28,255,nothing)
-cv2.createTrackbar('S_MIN','image',62,255,nothing)
-cv2.createTrackbar('V_MIN','image',11,255,nothing)
-cv2.createTrackbar('H_MAX','image',55,255,nothing)
-cv2.createTrackbar('S_MAX','image',255,255,nothing)
-cv2.createTrackbar('V_MAX','image',174,255,nothing)
+cv2.createTrackbar('H_MIN','image',37,255,nothing)
+cv2.createTrackbar('S_MIN','image',43,255,nothing)
+cv2.createTrackbar('V_MIN','image',77,255,nothing)
+cv2.createTrackbar('H_MAX','image',87,255,nothing)
+cv2.createTrackbar('S_MAX','image',196,255,nothing)
+cv2.createTrackbar('V_MAX','image',255,255,nothing)
 
 switch = '0: OFF \n1 : ON'
 cv2.createTrackbar(switch,'image',0,1,nothing)
@@ -75,8 +76,8 @@ while(True):
     # When everything done, release the capture
 cv2.destroyAllWindows()
 clicked = False
-frames1, fs1, encoder1 = audiolab.wavread("beep-02.wav")
-frames2, fs2, encoder2 = audiolab.wavread("censor-beep-01.wav")
+pygame.init()
+pygame.mixer.music.load("click_one.wav")
 
 while(True):
         # Capture frame-by-frame
@@ -97,26 +98,26 @@ while(True):
         c = max(contours, key=cv2.contourArea)
         m = cv2.moments(c)
         center = (int(m['m10'] / m['m00']), int(m['m01'] / m['m00']))
-        screen_x = int((FRAME_WIDTH - center[0]) * WIDTH_RATIO)
-        screen_y = int(center[1] * HEIGHT_RATIO)
+        screen_x = int((FRAME_WIDTH - center[0]) * WIDTH_RATIO) - WIDTH_OFFSET
+        screen_y = int(center[1] * HEIGHT_RATIO) - HEIGHT_OFFSET
         screen_x = 0 if screen_x < 0 else screen_x
         screen_x = SCREEN_WIDTH if screen_x > SCREEN_WIDTH else screen_x
         screen_y = 0 if screen_y < 0 else screen_y
         screen_y = SCREEN_HEIGHT if screen_y > SCREEN_HEIGHT else screen_y
         screen_center = [screen_x, screen_y]
-        pyautogui.moveTo(screen_center[0] - WIDTH_OFFSET,screen_center[1] - HEIGHT_OFFSET)
+        #pyautogui.moveTo(screen_center[0],screen_center[1])
+        mouse.move(screen_x, screen_y)
         area = cv2.contourArea(c)
         if area > CLICK_THRESHOLD and not clicked:
             clicked = True
-            pyautogui.click()
-            audiolab.play(frames1)
+            mouse.click(screen_x, screen_y)
+            pygame.mixer.music.play()
         elif area < SCROLL_THRESHOLD and screen_center[1] < SCREEN_HEIGHT / 2 and not clicked:
-            pyautogui.scroll(2)
+            mouse.scroll(vertical=2)
         elif area < SCROLL_THRESHOLD and screen_center[1] > SCREEN_HEIGHT / 2 and not clicked:
-            pyautogui.scroll(-2)
+            mouse.scroll(vertical=-2)
         elif area < CLICK_THRESHOLD and clicked:
             clicked = False
-    cv2.imshow('image2', mask)
     if cv2.waitKey(1) & 0xFF == ord('q'):
             break
         # When everything done, release the capture
